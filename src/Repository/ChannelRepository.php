@@ -19,22 +19,27 @@ class ChannelRepository extends ServiceEntityRepository
         parent::__construct($registry, Channel::class);
     }
 
-    // /**
-    //  * @return Channel[] Returns an array of Channel objects
-    //  */
-    /*
-    public function findByExampleField($value)
-    {
-        return $this->createQueryBuilder('c')
-            ->andWhere('c.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('c.id', 'ASC')
-            ->setMaxResults(10)
-            ->getQuery()
-            ->getResult()
-        ;
+    private static $ALIAS_NAME = 'c';
+
+    private function getQuerybuilder(){
+        return $this->createQueryBuilder(self::$ALIAS_NAME);
     }
-    */
+
+    public function getIdList()
+    {
+        $qb = $this->getQuerybuilder();
+
+        $qb->select(self::$ALIAS_NAME.'.id');
+
+        $result = $qb->getQuery()->getResult();
+
+        $list = [];
+        foreach($result as $r){
+            $list[] = $r['id'];
+        }
+
+        return $list;
+    }
 
     /*
     public function findOneBySomeField($value): ?Channel

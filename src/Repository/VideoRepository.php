@@ -19,9 +19,29 @@ class VideoRepository extends ServiceEntityRepository
         parent::__construct($registry, Video::class);
     }
 
-    // /**
-    //  * @return Video[] Returns an array of Video objects
-    //  */
+    private static $ALIAS_NAME = 'v';
+
+    private function getQuerybuilder(){
+        return $this->createQueryBuilder('v');
+    }
+
+    public function getIdList()
+    {
+        $qb = $this->getQuerybuilder();
+
+        $qb->select(self::$ALIAS_NAME.'.id');
+
+        $result = $qb->getQuery()->getResult();
+
+        $list = [];
+        foreach($result as $r){
+            $list[] = $r['id'];
+        }
+
+        return $list;
+    }
+
+
     /*
     public function findByExampleField($value)
     {
