@@ -43,10 +43,10 @@ class Video
     #[ORM\Column(type: 'string', length: 255)]
     private $path;
 
-    #[ORM\Column(type: 'bigint', length: 2)]
+    #[ORM\Column(type: 'bigint')]
     private $category;
 
-    #[ORM\Column(type: 'json')]
+    #[ORM\Column(type: 'bigint')]
     private $member;
 
 
@@ -76,7 +76,7 @@ class Video
     }
 
 
-    public function getDescription(): ?string
+    public function getDescription()
     {
         return $this->description;
     }
@@ -99,7 +99,7 @@ class Video
         return $this;
     }
 
-    public function getTitle(): ?string
+    public function getTitle()
     {
         return $this->title;
     }
@@ -111,7 +111,7 @@ class Video
         return $this;
     }
 
-    public function getPath(): ?string
+    public function getPath()
     {
         return $this->path;
     }

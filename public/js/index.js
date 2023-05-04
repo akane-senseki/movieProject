@@ -1,5 +1,5 @@
-import index from './vue/index.vue';
 import Vue from 'vue'
+import index from '../vue/index.vue';
 import Vuetify from 'vuetify'
 import Vuex from 'vuex'
 

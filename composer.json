@@ -11,6 +11,7 @@
         "doctrine/doctrine-migrations-bundle": "^3.2",
         "doctrine/orm": "^2.11",
         "google/apiclient": "~2.0",
+        "guzzlehttp/guzzle": "^7.5",
         "sensio/framework-extra-bundle": "^6.2",
         "symfony/console": "6.0.*",
         "symfony/dotenv": "6.0.*",
@@ -24,6 +25,7 @@
         "twig/twig": "^2.12|^3.0"
     },
     "require-dev": {
+        "barryvdh/laravel-debugbar": "^3.8",
         "symfony/maker-bundle": "^1.36",
         "symfony/stopwatch": "6.0.*",
         "symfony/web-profiler-bundle": "6.0.*"

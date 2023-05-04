@@ -41,6 +41,23 @@ class ChannelRepository extends ServiceEntityRepository
         return $list;
     }
 
+    public function getListByIds($list)
+    {
+        $qb = $this->getQuerybuilder();
+
+        $qb->where(self::$ALIAS_NAME.'.id IN (:list)')
+        ->setParameter('list', $list);
+        $result = $qb->getQuery()->getResult();
+
+        $list = [];
+        foreach($result as $r){
+            $list[$r->getId()]['title'] = $r->getTitle();
+            $list[$r->getId()]['path'] = $r->getPath();
+        }
+
+        return $list;
+    }
+
     /*
     public function findOneBySomeField($value): ?Channel
     {

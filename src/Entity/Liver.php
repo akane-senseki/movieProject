@@ -24,41 +24,41 @@ class Liver
     #[ORM\Column(type: 'boolean')]
     private $can_select;
 
-    public function getId(): ?int
+    public function getId()
     {
         return $this->id;
     }
 
-    public function getName(): ?string
+    public function getName()
     {
         return $this->name;
     }
 
-    public function setName(string $name): self
+    public function setName(string $name)
     {
         $this->name = $name;
 
         return $this;
     }
 
-    public function getTwitterId(): ?string
+    public function getTwitterId()
     {
         return $this->twitter_id;
     }
 
-    public function setTwitterId(?string $twitter_id): self
+    public function setTwitterId(?string $twitter_id)
     {
         $this->twitter_id = $twitter_id;
 
         return $this;
     }
 
-    public function getChannelId(): ?int
+    public function getChannelId()
     {
         return $this->channel_id;
     }
 
-    public function setChannelId(int $channel_id): self
+    public function setChannelId(int $channel_id)
     {
         $this->channel_id = $channel_id;
 

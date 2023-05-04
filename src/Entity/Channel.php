@@ -18,29 +18,29 @@ class Channel
     #[ORM\Column(type: 'string', length: 255)]
     private $path;
 
-    public function getId(): ?int
+    public function getId()
     {
         return $this->id;
     }
 
-    public function getTitle(): ?string
+    public function getTitle()
     {
         return $this->title;
     }
 
-    public function setTitle(string $title): self
+    public function setTitle(string $title)
     {
         $this->title = $title;
 
         return $this;
     }
 
-    public function getPath(): ?string
+    public function getPath()
     {
         return $this->path;
     }
 
-    public function setPath(string $path): self
+    public function setPath(string $path)
     {
         $this->path = $path;
 

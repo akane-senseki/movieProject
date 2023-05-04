@@ -2,20 +2,19 @@
 
 namespace App\Controller;
 
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
-use Twig\Environment;
-use Doctrine\Persistence\ManagerRegistry;
 use App\Entity\Liver;
 use App\Entity\Video;
+use Twig\Environment;
+use App\Consts\Consts;
 use App\Entity\Channel;
+use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 class VideoController extends BaseController
 {
-
-    // youtubeAPIの認証キー
-    private static $API_KEY = 'AIzaSyC1ed3k0MAHGv6ciLwsChtq-pQjFbvSoq0';
 
     //結果データの種類
     private static $KIND_VIDEO = 'youtube#video';
@@ -25,6 +24,7 @@ class VideoController extends BaseController
     #[Route('/list', name:'index')]
     function indexAction(Environment $twig, ManagerRegistry $doctrine): Response
     {
+
         $em = $doctrine->getManager();
         
         $sql = <<<___SQL
@@ -35,11 +35,24 @@ class VideoController extends BaseController
 
         $params = ['liver_id' => 1];
 
-        $resultObj = $em->getConnection()->prepare($sql)->execute($params)->fetchAll();
-// dump($resultObj);
+        try {
+            $videoList = $em->getConnection()->prepare($sql)->execute($params)->fetchAll();
 
+            //チャンネルデータを取得
+            $channnelIdList = [];
+            foreach($videoList as $v){
+                $channnelIdList[$v['channel_id']] = $v['channel_id'];
+            }
+            
+            $channnelList = $em->getRepository(Channel::class)->getListByIds($channnelIdList);
+
+
+        } catch (\Exception $e) {
+            dump($e);
+        }
         return new Response($twig->render('list.html.twig', [
-            'list' => [],
+            'channel_list' => $channnelList,
+            'list' => $videoList,
         ]));
     }
 
@@ -47,11 +60,7 @@ class VideoController extends BaseController
     #[Route('/save_data', name:'getData')]
     function saveDataAction(Environment $twig, ManagerRegistry $doctrine): Response
     {
-        $client = new \Google\Client();
-        $client->setDeveloperKey(self::$API_KEY);
-        $youtube = new \Google\Service\YouTube($client);
-        
-
+        $youtube = $this->getYoutube();
 
         $em = $doctrine->getManager();
         $liverList = $em->getRepository(Liver::class)->findAll();
@@ -70,11 +79,13 @@ class VideoController extends BaseController
         $em->beginTransaction();
         try {
             $searchResponse = $youtube->search->listSearch('id,snippet', [
-                'q' => '甲斐田晴',
+                'q' => '長尾景',
                 'maxResults' => 50,
                 'order' => 'date',
-                // 'publishedBefore' => '2020-04-10T00%3A00%3A00Z',
+                'publishedBefore' => '2023-04-01T00%3A00%3A00Z',
             ]);
+
+            dump($searchResponse);
 
             
             $list = [];
@@ -93,8 +104,10 @@ class VideoController extends BaseController
                     $newVideo->setDescription($description);
 
                     //カテゴリの設定
+                    $newVideo = Consts::setCategoryByConsts($newVideo);
 
                     //参加ライバーの設定
+                    $newVideo = Consts::setMemberByConsts($liverList, $newVideo);
 
                     //video保存
                     $em->persist($newVideo);
@@ -144,14 +157,26 @@ class VideoController extends BaseController
         } catch (\Exception $e) {
             $em->rollback();
             $em->close();
+            dump("エラー―です！");
             dump($e);
         }
-        throw new \Exception("9999");
+        // throw new \Exception("9999");
         // return new Response($twig->render('base.html.twig', [
         return new Response($twig->render('list.html.twig', [
             // 'conferences' => $conferenceRepository->findAll(),
             'controllerName' => 'loginController',
-            'list' => $list,
+            'list' => [],
         ]));
+    }
+
+    #[Route('/post_data', name:'search')]
+    function searchAction(Request $request)
+    {
+        dump($request->getContent());
+        throw new \Exception("取り合えずコントローラーまできたよ！");
+        // return new Response($twig->render('list.html.twig', [
+            // 'channel_list' => $channnelList,
+            // 'list' => $videoList,
+        // ]));
     }
 }

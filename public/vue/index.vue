@@ -3,9 +3,17 @@
 </template>
 
 <script>
-export default {
-    props: {
-        
+module.exports = {
+  props: {
+    id: Number,
+    label: String,
+    value: Number
+  },
+  computed: {
+    active() {
+      return this.value === this.id ? 'active' : false
     }
+  }
 }
+ 
 </script>

@@ -1,50 +1,168 @@
-<!DOCTYPE html>
 <html>
 	<head>
 		<meta charset="UTF-8">
-		<title>
-			{% block title %}検索結果
-			{% endblock %}
-		</title>
+		<title></title>
 		<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
 		<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text></svg>">
-		<script src="./js/index.js"></script>
+		<link rel="stylesheet" href="https://unpkg.com/@vuepic/vue-datepicker@latest/dist/main.css">
 		<script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
-		{% block stylesheets %}
-			{{ encore_entry_link_tags('app') }}
-		{% endblock %}
+		<script src="https://unpkg.com/@vuepic/vue-datepicker@latest"></script>
+		{# ajax #}
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.js"></script>
+		{# <script src="./js/index.js"></script> #}
+		<link rel="stylesheet" href="./css/reset.css">
+		<link rel="stylesheet" href="./css/style.css">
+		{# {% block stylesheets %}{{ encore_entry_link_tags('app') }}{% endblock %} #}
 	</head>
 	<body>
-		{% block body %}
-			<div id="app">
-				<header style="background:#e6e6fa;height: 100px;">
-					aaa
-				</header>
-				<div class="container" style="max-width: none;">
-					<div class="row">
-						<div id="side" class="col-2" style="background:#7fffd4;">
-							bbb
+		<div id="app">
+			<header>
+				<nav style="background:#d7d4ff !important" class="navbar navbar-expand-lg navbar-light bg-light">
+					<div class="container-fluid">
+						<a class="navbar-brand" href="#">検索ライバー：長尾 景</a>
+						<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+							<span class="navbar-toggler-icon"></span>
+						</button>
+						<div class="collapse navbar-collapse" id="navbarSupportedContent">
+							<ul class="navbar-nav me-auto mb-2 mb-lg-0">
+								<li id="btn_area" class="nav-item">
+									<a @click="changeIsAll" :class=" isAll ? 'btn is_select_category' : 'btn'">全て</a>
+									<a @click="changeIsOriginal" :class=" isOriginal ? 'btn is_select_category' : 'btn'">本人</a>
+									<a @click="changeIsClip" :class=" isClip ? 'btn is_select_category' : 'btn'">切り抜き</a>
+									<a @click="changeIsHand" :class=" isHand ? 'btn is_select_category' : 'btn'">手描き</a>
+									<a @click="changeIsMMD" :class=" isMMD ? 'btn is_select_category' : 'btn'">MMD</a>
+								</li>
+							</ul>
+							<div name="search_form" class="d-flex">
+								<input v-model="toDate" class="form-control me-2" type="date" placeholder="from" aria-label="Search">～
+								<input v-model="fromDate" class="form-control me-2" type="date" placeholder="to" aria-label="Search">
+								<input v-model="keyword" class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+								<button @click="postDate" class="btn btn-outline-success" type="submit">Search</button>
+							</div>
 						</div>
-						<main class="col-9 ms-3">
-							<div class="d-flex flex-wrap">
-								{% for id, title in list %}
-									<div class="m-3">
-										<div>
-											<div class="image" style="width: 300px;height: 200px;background: #eee;"></div>
-										</div>
-										<div style="width:300px;">
-											<span>{{ title }}</span>
+					</div>
+				</nav>
+			</header>
+			<div class="container" style="max-width: none;">
+				<div class="row">
+					<div class="accordion col-2" id="accordionExample" style="padding:0; background:#625DA1;">
+						<h2 style="background:#8d88cb;color:#FFF;" class="accordion-header">with...</h2>
+						<div class="accordion-item">
+							<h2 class="accordion-header" id="headingOne">
+								<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+									VΔLZ
+								</button>
+							</h2>
+							<div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+								<li style="list-style:none;">
+									<ul class="mt-3">甲斐田 晴</ul>
+									<ul class="mt-3">弦月 藤士郎</ul>
+								</li>
+							</div>
+						</div>
+						<div class="accordion-item">
+							<h2 class="accordion-header" id="headingTwo">
+								<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+									一期生
+								</button>
+							</h2>
+						</div>
+						<div class="accordion-item">
+							<h2 class="accordion-header" id="headingThree">
+								<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+									二期生
+								</button>
+							</h2>
+						</div>
+						<div class="accordion-item">
+							<h2 class="accordion-header" id="headingThree">
+								<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+									らなきゅら
+								</button>
+							</h2>
+						</div>
+						<div class="accordion-item">
+							<h2 class="accordion-header" id="headingThree">
+								<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+									ぼるた
+								</button>
+							</h2>
+						</div>
+						<button class="btn btn-outline-success" type="submit">Search</button>
+					</div>
+					<main class="col-9 ms-3">
+						<div id="movie_area" class="d-flex flex-wrap">
+							{% for index, movie in list %}
+								<div class="m-3">
+									<div>
+										{# <div class="image" style="width: 300px;height: 200px;background: #eee;">
+										</div> #}
+										<a href="{{'https://www.youtube.com/watch?v='~movie.id}}" target="_blank" rel="noopener noreferrer">
+											<img class="thumbnail_img" src="{{ movie.path }}">
+										</a>
+									</div>
+									<div class="d-flex flex-wrap">
+										<div><img class="channel_img" src="{{ channel_list[movie.channel_id]['path'] }}"></div>
+										<div class="video_detail">
+											<a href="{{'https://www.youtube.com/watch?v='~movie.id}}" target="_blank" rel="noopener noreferrer">
+												<span>{{ movie.title|length > 45 ? movie.title|slice(0, 45) ~ '…' : movie.title }}</span>
+											</a>
+											<br>
+											<a>
+												<small>{{ channel_list[movie.channel_id]['title'] }}</small>
+											</a>
 										</div>
 									</div>
-								{% endfor %}
-							</div>
-						</main>
-					</div>
+								</div>
+							{% endfor %}
+						</div>
+					</main>
 				</div>
 			</div>
-		{% endblock %}
+		</div>
+		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+		<script type="module">
+			var app = new Vue({
+			el: '#app',
+			components: { 
+			},
+			data: {
+				isAll: false,
+				isOriginal: false,
+				isClip: false,
+				isHand: false, 
+				isMMD: false,
+				toDate: null,
+				fromDate: null,
+				keyword: "",
+			},
+			created(){
+			},
+			methods: {
+				changeIsAll() { this.isAll = this.isAll ? false : true; },
+				changeIsOriginal() { this.isOriginal = this.isOriginal ? false : true; },
+				changeIsClip() { this.isClip = this.isClip ? false : true; },
+				changeIsHand() { this.isHand = this.isHand ? false : true; },
+				changeIsMMD() { this.isMMD = this.isMMD ? false : true; },
+				postDate(){
+					var params = {
+						'is_all' : this.isAll,
+						'is_original' : this.isOriginal,
+						'is_clip' : this.isClip,
+						'is_hand' : this.isHand,
+						'is_MMD' : this.isMMD,
+						'to_date' : this.toDate,
+						'from_date' : this.fromDate,
+						'keyword' : this.keyword,
+					};
+					axios
+					.post('/post_data', params)
+					.then()
+					.catch();
+				},
+			},
+			delimiters: ['{$', '$}']
+			})
+		</script>
 	</body>
-	{% block javascripts %}
-		{{ encore_entry_script_tags('app') }}
-	{% endblock %}
 </html>
