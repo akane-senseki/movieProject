@@ -29,13 +29,14 @@
 									<a @click="changeIsAll" :class=" isAll ? 'btn is_select_category' : 'btn'">全て</a>
 									<a @click="changeIsOriginal" :class=" isOriginal ? 'btn is_select_category' : 'btn'">本人</a>
 									<a @click="changeIsClip" :class=" isClip ? 'btn is_select_category' : 'btn'">切り抜き</a>
+									<a @click="changeIsVocal" :class=" isVocal ? 'btn is_select_category' : 'btn'">人力</a>
 									<a @click="changeIsHand" :class=" isHand ? 'btn is_select_category' : 'btn'">手描き</a>
 									<a @click="changeIsMMD" :class=" isMMD ? 'btn is_select_category' : 'btn'">MMD</a>
 								</li>
 							</ul>
-							<div name="search_form" class="d-flex">
-								<input v-model="toDate" class="form-control me-2" type="date" placeholder="from" aria-label="Search">～
-								<input v-model="fromDate" class="form-control me-2" type="date" placeholder="to" aria-label="Search">
+							<div class="d-flex">
+								<input v-model="fromDate" class="form-control me-2" type="date" placeholder="from" aria-label="Search">～
+								<input v-model="toDate" class="form-control me-2" type="date" placeholder="to" aria-label="Search">
 								<input v-model="keyword" class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
 								<button @click="postDate" class="btn btn-outline-success" type="submit">Search</button>
 							</div>
@@ -93,7 +94,7 @@
 					<main class="col-9 ms-3">
 						<div id="movie_area" class="d-flex flex-wrap">
 							{% for index, movie in list %}
-								<div class="m-3">
+								<div class="mx-1 my-3">
 									<div>
 										{# <div class="image" style="width: 300px;height: 200px;background: #eee;">
 										</div> #}
@@ -108,14 +109,27 @@
 												<span>{{ movie.title|length > 45 ? movie.title|slice(0, 45) ~ '…' : movie.title }}</span>
 											</a>
 											<br>
-											<a>
+											<a href="{{'https://www.youtube.com/channel/'~movie.channel_id}}">
 												<small>{{ channel_list[movie.channel_id]['title'] }}</small>
 											</a>
+											<br>
+											<small>{{ movie.published_at|date('Y/m/d') }}</small>
 										</div>
 									</div>
 								</div>
 							{% endfor %}
 						</div>
+						<form name="data_post_form" method="post" action="/post">
+							<input name="is_all" type="hidden" v-model="isAll">
+							<input name="is_original" type="hidden" v-model="isOriginal">
+							<input name="is_clip" type="hidden" v-model="isClip">
+							<input name="is_vocal" type="hidden" v-model="isVocal">
+							<input name="is_hand" type="hidden" v-model="isHand">
+							<input name="is_MMD" type="hidden" v-model="isMMD">
+							<input name="from_date" type="hidden" v-model="fromDate">
+							<input name="to_date" type="hidden" v-model="toDate">
+							<input name="keyword" type="hidden" v-model="keyword">
+						</form>
 					</main>
 				</div>
 			</div>
@@ -130,35 +144,35 @@
 				isAll: false,
 				isOriginal: false,
 				isClip: false,
+				isVocal: false,
 				isHand: false, 
 				isMMD: false,
 				toDate: null,
 				fromDate: null,
 				keyword: "",
+				movieList: [],
 			},
 			created(){
+				this.isAll = {{ is_all }};
+				this.isOriginal = {{ is_original }};
+				this.isClip = {{ is_clip }};
+				this.isVocal = {{ is_vocal }};
+				this.isHand = {{ is_hand }};
+				this.isMMD = {{ is_MMD }};
+				this.toDate = "{{ to_date }}";
+				this.fromDate = "{{ from_date }}";
+				this.keyword = "{{ keyword }}";
 			},
 			methods: {
 				changeIsAll() { this.isAll = this.isAll ? false : true; },
 				changeIsOriginal() { this.isOriginal = this.isOriginal ? false : true; },
 				changeIsClip() { this.isClip = this.isClip ? false : true; },
+				changeIsVocal() { this.isVocal = this.isVocal ? false : true; },
 				changeIsHand() { this.isHand = this.isHand ? false : true; },
 				changeIsMMD() { this.isMMD = this.isMMD ? false : true; },
 				postDate(){
-					var params = {
-						'is_all' : this.isAll,
-						'is_original' : this.isOriginal,
-						'is_clip' : this.isClip,
-						'is_hand' : this.isHand,
-						'is_MMD' : this.isMMD,
-						'to_date' : this.toDate,
-						'from_date' : this.fromDate,
-						'keyword' : this.keyword,
-					};
-					axios
-					.post('/post_data', params)
-					.then()
-					.catch();
+					var form = document.forms['data_post_form'];
+					form.submit();
 				},
 			},
 			delimiters: ['{$', '$}']

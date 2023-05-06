@@ -1,19 +1,24 @@
 /* メイン */
 .thumbnail_img {
-    width: 350px;
-    height: 200px;
+    width: 320px;
+    height: 180px;
+    border-radius: 15px;
+}
+
+.thumbnail_img:hover{
+    box-shadow: 0 0px 10px 0 rgba(54, 70, 122, 0.5);
 }
 
 .channel_img {
     border-radius: 50%;
-    width: 40px;
-    height: 40px;
+    width: 35px;
+    height: 35px;
     margin-top: 10px;
 }
 
 .video_detail {
     margin-left: 10px;
-    width: 300px;
+    width: 285px;
 
 }
 

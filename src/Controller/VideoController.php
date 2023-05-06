@@ -22,37 +22,119 @@ class VideoController extends BaseController
     private static $KIND_PLAYLIST = 'youtube#playlist';
 
     #[Route('/list', name:'index')]
-    function indexAction(Environment $twig, ManagerRegistry $doctrine): Response
+    function indexAction(Request $request, Environment $twig, ManagerRegistry $doctrine): Response
     {
-
         $em = $doctrine->getManager();
-        
+        session_start();
+
+        //初期設定
+        if(!isset($_SESSION['is_all'])){
+            $_SESSION['is_all'] = false;
+            $_SESSION['is_original'] = false;
+            $_SESSION['is_clip'] = false;
+            $_SESSION['is_vocal'] = false;
+            $_SESSION['is_hand'] = false;
+            $_SESSION['is_MMD'] = false;
+            $_SESSION['from_date'] = null;
+            $_SESSION['to_date'] = null;
+            $_SESSION['keyword'] = "";
+        }else{
+            //bool値変換(vueとの兼ね合い)
+            $_SESSION['is_all'] = $this->ConvertFlgToBool($_SESSION['is_all']);
+            $_SESSION['is_original'] = $this->ConvertFlgToBool($_SESSION['is_original']);
+            $_SESSION['is_clip'] = $this->ConvertFlgToBool($_SESSION['is_clip']);
+            $_SESSION['is_vocal'] = $this->ConvertFlgToBool($_SESSION['is_vocal']);
+            $_SESSION['is_hand'] = $this->ConvertFlgToBool($_SESSION['is_hand']);
+            $_SESSION['is_MMD'] = $this->ConvertFlgToBool($_SESSION['is_MMD']);
+        }
+
+        $keywordSelect = "( `title` LIKE '%".$_SESSION['keyword']."%' OR `description` LIKE '%".$_SESSION['keyword']."%' )";
+
+        //todo ここでエラーになったらそのライバーは未実装だよ！エラーが必要になる
+        $originalChannelId = $em->getRepository(Liver::class)->findOneBy(['twitter_id' => 'kei_nagao2434'])->getChannelId();
+
+        $categorySelect = "";
+        if(!$_SESSION['is_all']){
+            if($_SESSION['is_original']){
+                $categorySelect = "`channel_id` = '".$originalChannelId."'";
+            }
+
+            if($_SESSION['is_clip']){
+                $categorySelect .= $categorySelect == "" ? "" : " OR";
+                $categorySelect .= " JSON_CONTAINS(`category`, ".Consts::$categoryList['切り抜き'].", '$.category_list')";
+            }
+
+            if($_SESSION['is_MMD']){
+                $categorySelect .= $categorySelect == "" ? "" : " OR";
+                $categorySelect .= " JSON_CONTAINS(`category`, ".Consts::$categoryList['MMD'].", '$.category_list')";
+            }
+
+            if($_SESSION['is_vocal']){
+                $categorySelect .= $categorySelect == "" ? "" : " OR";
+                $categorySelect .= " JSON_CONTAINS(`category`, ".Consts::$categoryList['人力'].", '$.category_list')";
+            }
+
+            if($_SESSION['is_hand']){
+                $categorySelect .= $categorySelect == "" ? "" : " OR";
+                $categorySelect .= " JSON_CONTAINS(`category`, ".Consts::$categoryList['手描き'].", '$.category_list')";
+            }
+
+            //何かしら条件があるならくくる
+            if($categorySelect){
+                $categorySelect = " AND ( ".$categorySelect." )";
+            }
+        }
+
+        $fromDateSelect = "";
+        if($_SESSION['from_date']){
+            $fromDateSelect = " AND `published_at` >= '".$_SESSION['from_date']."'";
+        }
+
+        $toDateSelect = "";
+        if($_SESSION['to_date']){
+            $toDateSelect = " AND `published_at` <= '".$_SESSION['to_date']."'";
+        }
+
+
         $sql = <<<___SQL
-            SELECT * FROM video WHERE JSON_CONTAINS(`member`, :liver_id, '$.member_list')
+        SELECT * 
+        FROM video 
+        WHERE $keywordSelect
+        $categorySelect
+        $fromDateSelect
+        $toDateSelect
+        AND JSON_CONTAINS(`member`, 1, '$.member_list')
+        ORDER BY `published_at` DESC
         ___SQL;
         //動くSQL
         //SELECT * FROM `video` WHERE JSON_CONTAINS(`member`, 1, '$.member_list');
 
-        $params = ['liver_id' => 1];
+        $params = [
+            // 'liver_id' => 1, 
+            // 'category_id' => 3, 
+        ];
+        
+        $videoList = $em->getConnection()->prepare($sql)->execute($params)->fetchAll();
 
-        try {
-            $videoList = $em->getConnection()->prepare($sql)->execute($params)->fetchAll();
-
-            //チャンネルデータを取得
-            $channnelIdList = [];
-            foreach($videoList as $v){
-                $channnelIdList[$v['channel_id']] = $v['channel_id'];
-            }
-            
-            $channnelList = $em->getRepository(Channel::class)->getListByIds($channnelIdList);
-
-
-        } catch (\Exception $e) {
-            dump($e);
+        //チャンネルデータを取得
+        $channnelIdList = [];
+        foreach($videoList as $v){
+            $channnelIdList[$v['channel_id']] = $v['channel_id'];
         }
+        
+        $channnelList = $em->getRepository(Channel::class)->getListByIds($channnelIdList);
         return new Response($twig->render('list.html.twig', [
             'channel_list' => $channnelList,
             'list' => $videoList,
+            'is_all' => $this->ConvertFlgToString($_SESSION['is_all']),
+            'is_original' => $this->ConvertFlgToString($_SESSION['is_original']),
+            'is_clip' => $this->ConvertFlgToString($_SESSION['is_clip']),
+            'is_vocal' => $this->ConvertFlgToString($_SESSION['is_vocal']),
+            'is_hand' => $this->ConvertFlgToString($_SESSION['is_hand']),
+            'is_MMD' => $this->ConvertFlgToString($_SESSION['is_MMD']),
+            'to_date' => $_SESSION['to_date'],
+            'from_date' => $_SESSION['from_date'],
+            'keyword' => $_SESSION['keyword'],
         ]));
     }
 
@@ -82,13 +164,11 @@ class VideoController extends BaseController
                 'q' => '長尾景',
                 'maxResults' => 50,
                 'order' => 'date',
-                'publishedBefore' => '2023-04-01T00%3A00%3A00Z',
+                'publishedBefore' => '2020-11-15T00%3A00%3A00Z',
             ]);
 
-            dump($searchResponse);
-
-            
             $list = [];
+            $count = 0;
             foreach($searchResponse['items'] as $item){
                 //DBに存在しなかったら保存
                 if(!in_array($item['id']['videoId'], $videoIdList)){
@@ -112,6 +192,8 @@ class VideoController extends BaseController
                     //video保存
                     $em->persist($newVideo);
                     $em->flush($newVideo);
+
+                    $count++;
                     
                     //channelがDBに存在しないならそれも保存する
                     if(!in_array($item['snippet']['channelId'], $channelIdList)){
@@ -157,10 +239,9 @@ class VideoController extends BaseController
         } catch (\Exception $e) {
             $em->rollback();
             $em->close();
-            dump("エラー―です！");
-            dump($e);
         }
-        // throw new \Exception("9999");
+
+        throw new \Exception($count."個の動画が追加されました！");
         // return new Response($twig->render('base.html.twig', [
         return new Response($twig->render('list.html.twig', [
             // 'conferences' => $conferenceRepository->findAll(),
@@ -169,14 +250,39 @@ class VideoController extends BaseController
         ]));
     }
 
-    #[Route('/post_data', name:'search')]
-    function searchAction(Request $request)
+    #[Route('/post', name:'post')]
+    function searchAction(Request $request, Environment $twig, ManagerRegistry $doctrine)
     {
-        dump($request->getContent());
-        throw new \Exception("取り合えずコントローラーまできたよ！");
-        // return new Response($twig->render('list.html.twig', [
-            // 'channel_list' => $channnelList,
-            // 'list' => $videoList,
-        // ]));
+        $session = $request->getSession();
+
+        session_start();
+
+        $_SESSION['is_all'] = $this->ConvertFlgToBool($request->get('is_all'));
+        $_SESSION['is_original'] = $this->ConvertFlgToBool($request->get('is_original'));
+        $_SESSION['is_clip'] = $this->ConvertFlgToBool($request->get('is_clip'));
+        $_SESSION['is_vocal'] = $this->ConvertFlgToBool($request->get('is_vocal'));
+        $_SESSION['is_hand'] = $this->ConvertFlgToBool($request->get('is_hand'));
+        $_SESSION['is_MMD'] = $this->ConvertFlgToBool($request->get('is_MMD'));
+        $_SESSION['to_date'] = $request->get('to_date');
+        $_SESSION['from_date'] = $request->get('from_date');
+        $_SESSION['keyword'] = $request->get('keyword');
+
+        // $session->set("is_all", $this->ConvertFlgToBool($request->get('is_all')));
+        // $session->set("is_original", $this->ConvertFlgToBool($request->get('is_original')));
+        // $session->set("is_clip", $this->ConvertFlgToBool($request->get('is_clip')));
+        // $session->set("is_hand", $this->ConvertFlgToBool($request->get('is_hand')));
+        // $session->set("is_MMD", $this->ConvertFlgToBool($request->get('is_MMD')));
+        // $session->set("to_date", $request->get('to_date'));
+        // $session->set("from_date", $request->get('from_date'));
+        // $session->set("keyword", $request->get('keyword'));
+        return $this->redirectToRoute('index');
+    }
+
+    function ConvertFlgToBool($flg){
+        return $flg == "true" ? true : false;
+    }
+
+    function ConvertFlgToString($flg){
+        return $flg == true ? "true" : "false";
     }
 }

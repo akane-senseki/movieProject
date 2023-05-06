@@ -7,7 +7,7 @@ use App\Entity\Video;
 class Consts
 {
 
-    private static $categoryList = [
+    public static $categoryList = [
         "手描き" => 3,
         "人力" => 2,
         "MMD" => 1,
